@@ -1,0 +1,136 @@
+<div class="container"> 
+	<h1>{{pagetitle}}</h1>
+	<label>Filiale</label><input type="text" ng-model="filiale" value="--"></br>
+	<label>KW:</label><input type="text" ng-model="kw" value="01"></br>
+
+	<label>geöffnet von </label><input type="time" ng-model="von"></br>
+	<label>bis </label><input type="time" ng-model="bis"></br>
+	
+	
+	<table class="table">
+        <tr>
+            
+            <th>Name</th>
+            <th>Stunden pro Woche</th>
+            <th></th>
+        </tr>
+        <tr ng:repeat="mitarb in mitarbeiter">
+            <td><input type="text" ng:model="mitarb.name" ng:required class="input-small" ng-change="weekdays2()"></td>           
+            <td><input type="number" ng:model="mitarb.std" ng:required class="input-mini" ng-change="weekdays2()"></td>
+            <td>
+                [<a href ng:click="removeItem($index)">X</a>]
+            </td>
+        </tr>
+        <tr>
+			<td>Total:</td>
+            <td>{{weektotal()}} Stunden</td>
+        </tr>
+        <tr>
+            <td><a href ng:click="addItem()" class="btn btn-small">Eine Mitarbeiterin hinzufügen</a></td>
+        </tr>
+    </table>
+
+<!--
+		<tr>
+			<th></th><th></th>
+			<th ng-repeat="uhrzeit in uhrzeiten" colspan="2">
+				{{uhrzeit.val}}
+			</th>
+		</tr>
+-->		
+		<div ng-repeat="weekday in weekdays">
+			<div class="weekday">{{weekday.val}}
+				<table>
+					<tr>
+						<th></th>
+						<th ng-repeat="uhrzeit in uhrzeiten" >
+							{{uhrzeit.val}}
+						</th>
+						<th>
+							von
+						</th>
+						<th>
+							bis
+						</th>
+						<th>
+							Stunden
+						</th>
+						<th>
+							Rest-Stunden
+						</th>
+					</tr>
+					<tr ng-repeat="mitarb in weekday.mitarbeiter">
+						<TD>{{mitarb.name}}</TD>
+						<td ng-repeat="uhrzeit in mitarb.uhrzeiten">
+							<table>
+								<tr>
+									<td>
+										<input type="checkbox" ng-model="uhrzeit.voll"  ng-change="calcAll(mitarb, $parent.$index)">
+									</td>
+									<td>
+										<input type="checkbox" ng-model="uhrzeit.halb"  ng-change="calcAll(mitarb, $parent.$index)">
+									</td>
+								</tr>
+							</table>
+						</td>
+						<td>
+							{{mitarb.von}}
+						</td>
+						<td>
+							{{mitarb.bis}}
+						</td>
+						<td>
+							{{mitarb.stunden}}
+						</td>
+						<td>
+							{{mitarb.reststunden}}
+						</td>
+					</tr>
+				
+				</table>
+			
+			</div>
+		</div>
+		
+		<input type="button" value="Generiere Wochenplan" ng-click="generierePdf()">
+
+        <div id="outputtable" ng-bind-html="doc">
+		</div>
+	
+        <div id="pdfoutputtable" >
+		</div>
+
+
+
+
+		
+<!--
+	<div id="lovebooster_screen_image"><img ng-src="{{splashscreen}}"></div>
+		<div id="lovebooster_screen_content">
+			<div class="home_top"></div>
+			<center><div class="btn_weiter" ng-click="go_property('0')">test</div></center>
+		</div>
+	</div>
+-->	
+</div>
+
+<!--
+ng-style="container_wh()" resize
+
+		<img src="./images/button/button_weiter_click1.png" class="btn_1">
+		<div class="btn_2">
+			<div  class="btn_2_img"><img src="./images/button/button_weiter_click2.png" class="btn_2" ></div>
+		</div>
+		<img src="./images/button/button_weiter_click3.png" class="btn_3">
+		</div>
+-->
+		
+	
+<!--
+<div class="continue2">weiter</div>
+<input class="continue" id="home" ui-sref="home2" type="image"   value="Weiter" />
+<button class="continue2" type="button" ui-sref="home2">Click Me!</button> 
+
+-->
+
+
