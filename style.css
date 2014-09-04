@@ -1,3 +1,69 @@
+.store, .mitarbeiter , .page, .container, .weekday{
+
+-webkit-box-shadow: 6px 7px 11px 3px rgba(0,0,0,1);
+-moz-box-shadow: 6px 7px 11px 3px rgba(0,0,0,1);
+box-shadow: 6px 7px 11px 3px rgba(0,0,0,1);	
+}
+
+
+.buttons{
+	display: inline-block;
+	background: #410440; /* Old browsers */
+	background: -moz-linear-gradient(top, #410440 0%, #410440 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#410440), color-stop(100%,#410440)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #410440 0%,#410440 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #410440 0%,#410440 100%); /* Opera11.10+ */
+	background: -ms-linear-gradient(top, #410440 0%,#410440 100%); /* IE10+ */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#410440', endColorstr='#410440',GradientType=0 ); /* IE6-9 */
+	background: linear-gradient(top, #410440 0%,#410440 100%); /* W3C */
+	border: 1px solid #bb0;
+	padding: 0 2em;
+	margin: 0.2em;
+	/*font: bold 1em/2em Arial, Helvetica;*/
+	text-decoration: none;
+	color: #fff;
+	border-radius: .2em;
+	width:45%;
+}
+.save, .preview {
+  display: inline-block;
+  background: #eeeeee; /* Old browsers */
+  background: -moz-linear-gradient(top, #eeeeee 0%, #eeeeee 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#eeeeee), color-stop(100%,#eeeeee)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, #eeeeee 0%,#eeeeee 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, #eeeeee 0%,#eeeeee 100%); /* Opera11.10+ */
+  background: -ms-linear-gradient(top, #eeeeee 0%,#eeeeee 100%); /* IE10+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#eeeeee', endColorstr='#eeeeee',GradientType=0 ); /* IE6-9 */
+  background: linear-gradient(top, #eeeeee 0%,#eeeeee 100%); /* W3C */
+  border: 1px solid #a1a1a1;
+  padding: 0 2em;
+  margin: 0.5em;
+  font: bold 1em/2em Arial, Helvetica;
+  text-decoration: none;
+  color: #333;
+  border-radius: .2em;
+}
+
+.buttons:before{
+	float: left;
+	width: 0.8em;
+	text-align: center;
+	/*font-size: 1.7em;*/
+	margin: 0 0.5em 0 -1em;
+	padding: 0 .2em;
+	pointer-events: none;
+}
+
+.add:before    { content: "\271A";  color:#0f0;}
+.delete:before { content: "\2718";color:#f00;}
+.save:before   { content: "\1F4BE";color:#00f}
+.preview:before   { content: "\1F5CE";color:#777}
+
+
+th.header1 {
+	background-color:#410440;
+	color:#fff;
+}
 
 body { 
 	background-color:#888;
@@ -5,23 +71,75 @@ body {
 	margin:0px;
 	border:0px;
 	font-weight:bolder;
-	font-size:100%;
+	font-size:75%;
 	color:#000;
+	font-family: "arial";
+
 }
+
 label {
 	width:30%;
 }
 
-input {
-	width:70%;
+.info , .weekday  , .generate{
+	width:100%;
+	display:inline-block;
+	margin-bottom:20px;
+}
+
+.store{
+	float:left;
+	width:45%;
+}
+.left {
+	float:left;
+	width:50%;
+}
+.mitarbeiter {
+	float:right;
+	width:45%;
+}
+.right {
+	float:right;
+	width:45%;
+}
+.right .buttons {
+	float:right;
+	width:75%;
+}
+.left .buttons {
+	float:left;
+	width:75%;
 }
 
 
+.store table  , .mitarbeiter table{
+	width:100%;
+}
+
+
+.store input ,.mitarbeiter input{
+	width:95%;
+}
+
+
+.page {
+	text-align:center;
+	width:100%;
+	margin-bottom:20px;
+}	
+.title {
+	padding-top:5px;
+	padding-bottom:5px;
+	background-color:#410440;
+	color:#fff;
+}
 
 .container {
 	margin:auto;
+	padding:10px;
 	position:relative; 
-	width:800px;
+	width:900px;
 	background-color:#fff;
 }
 
@@ -34,6 +152,53 @@ position:absolute;
 	margin-top:-25%;
 }
 
+table  {
+    width:100%;
+	background-color:#fff;
+	border:1px solid #000000;
+	margin:0px;
+	padding:0px;
+	border-spacing: 0px;
+	font-family: "arial";
+	font-size:100%;
+}
+table.check  {
+	border:0px solid #000000;
+}
+.check td {
+	float:left;
+	border:0px solid #000000;
+}
+
+
+
+th {
+	border: 1px solid #000;
+}
+td {
+	border:1px solid #000000;
+    padding:0px;
+	margin:0px;
+}
+input {
+	margin:0px;
+	padding:0px;
+}
+td.links {
+	border:1px solid #000000;
+    border-top-style: solid;
+    border-right-style: dotted;
+    border-bottom-style: solid;
+    border-left-style: solid;
+
+}
+td.rechts {
+	border:1px solid #000000;
+    border-top-style: solid;
+    border-right-style: solid;
+    border-bottom-style: solid;
+    border-left-style: none;
+}
 
 
 table.pdfrender  {
@@ -55,7 +220,7 @@ th.day, th.time {
 }
 
 th.day {
-	font-size:150%;
+	font-size:100%;
 }
 
 td.rot {

@@ -1,34 +1,60 @@
 <div class="container"> 
-	<h1>{{pagetitle}}</h1>
-	<label>Filiale</label><input type="text" ng-model="filiale" value="--"></br>
-	<label>KW:</label><input type="text" ng-model="kw" value="01"></br>
-
-	<label>geöffnet von </label><input type="time" ng-model="von"></br>
-	<label>bis </label><input type="time" ng-model="bis"></br>
 	
 	
-	<table class="table">
-        <tr>
-            
-            <th>Name</th>
-            <th>Stunden pro Woche</th>
-            <th></th>
-        </tr>
-        <tr ng:repeat="mitarb in mitarbeiter">
-            <td><input type="text" ng:model="mitarb.name" ng:required class="input-small" ng-change="weekdays2()"></td>           
-            <td><input type="number" ng:model="mitarb.std" ng:required class="input-mini" ng-change="weekdays2()"></td>
-            <td>
-                [<a href ng:click="removeItem($index)">X</a>]
-            </td>
-        </tr>
-        <tr>
-			<td>Total:</td>
-            <td>{{weektotal()}} Stunden</td>
-        </tr>
-        <tr>
-            <td><a href ng:click="addItem()" class="btn btn-small">Eine Mitarbeiterin hinzufügen</a></td>
-        </tr>
-    </table>
+	<div class="page">
+		<div class="title">
+			<h1>{{pagetitle}}</h1>
+		</div>
+	</div>
+		
+	<div class="info">
+		<div class="store">
+			<table>
+				<tr>
+					<th colspan="4" class="header1">Storeinformation</th>
+				</tr>
+				<tr>
+					<th rowspan="2">Filiale</th>
+					<th rowspan="2">Kw</th>
+					<th colspan="2">geöffnet</br><div  </th>
+				</tr>
+				<tr>
+					<th>von</th>
+					<th>bis</th>
+				</tr>
+				<tr>
+					<td><input type="text" ng-model="filiale" value="--"></td>
+					<td><input type="text" ng-model="kw" value="01"></td>
+					<td><input type="time" ng-model="von"></td>
+					<td><input type="time" ng-model="bis"></td>
+				</tr>
+			</table>
+		</div>
+		<div class="mitarbeiter">
+			<table>
+				<tr>
+					<th class="header1" colspan="3">Mitarbeiter</th>
+				</tr>
+				<tr>
+					<th>Name</th>
+					<th>Stunden pro Woche</th>
+					<th></th>
+				</tr>
+				<tr ng:repeat="mitarb in mitarbeiter">
+					<td><input type="text" ng:model="mitarb.name" ng:required class="input-small" ng-change="weekdays2()"></td>           
+					<td><input type="number" ng:model="mitarb.std" ng:required class="input-mini" ng-change="weekdays2()"></td>
+					<td>
+						<a href ng:click="removeItem($index)" class="buttons delete">delete</a>
+					</td>
+				</tr>
+				<tr>
+					<td>Total:</td>
+					<td>{{weektotal()}} Stunden</td>
+					<td><a href ng:click="addItem()" class="buttons add">add</a></td>
+				</tr>
+			</table>
+		</div>
+	</div>
 
 <!--
 		<tr>
@@ -38,9 +64,13 @@
 			</th>
 		</tr>
 -->		
-		<div ng-repeat="weekday in weekdays">
-			<div class="weekday">{{weekday.val}}
+		<div  class="weekday">
+			<div ng-repeat="weekday in weekdays">
 				<table>
+				    <tr>
+						<th colspan="17" class="header1">{{weekday.val}}
+						</td>
+					</tr>
 					<tr>
 						<th></th>
 						<th ng-repeat="uhrzeit in uhrzeiten" >
@@ -62,12 +92,10 @@
 					<tr ng-repeat="mitarb in weekday.mitarbeiter">
 						<TD>{{mitarb.name}}</TD>
 						<td ng-repeat="uhrzeit in mitarb.uhrzeiten">
-							<table>
+							<table class="check">
 								<tr>
 									<td>
 										<input type="checkbox" ng-model="uhrzeit.voll"  ng-change="calcAll(mitarb, $parent.$index)">
-									</td>
-									<td>
 										<input type="checkbox" ng-model="uhrzeit.halb"  ng-change="calcAll(mitarb, $parent.$index)">
 									</td>
 								</tr>
@@ -91,8 +119,10 @@
 			
 			</div>
 		</div>
-		
-		<input type="button" value="Generiere Wochenplan" ng-click="generierePdf()">
+		<div class="generate">
+			<div class="left"><a href ng:click="removeItem($index)" class="buttons preview">preview</a></div>
+			<div class="right"><a href ng:click="removeItem($index)" class="buttons save" ng-click="generierePdf()">Generiere Wochenplan</a></div>
+		</div>
 
         <div id="outputtable" ng-bind-html="doc">
 		</div>

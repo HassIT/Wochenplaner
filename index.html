@@ -1,69 +1,23 @@
 ï»¿<!DOCTYPE html>
 <html ng-app="wochenplaner" lang="de">
+	<head>
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, target-densityDpi=device-dpi" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+		<meta name="Stefan HaÃŸ" content="Stefan HaÃŸ">
+		<script data-require="angular.js@1.2.21" data-semver="1.2.21" src="./js/angular.min.js"></script>
+		<script src="./js/angular-ui-router.min.js"></script>
+		<script src="./js/angular-cookies.min.js"></script>
+		<script type="text/javascript" src="dist/jspdf.min.js"></script>
+		<script src="./js/angular-sanitize.min.js"></script>
+		<script src="app.js"></script>
+		<script src="controller/appCtrl.js"></script>
+		<script src="controller/wochenplanerCtrl.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+		<script src="http://html2canvas.hertzen.com/build/html2canvas.js"></script>
+		<link rel="stylesheet" href="style.css" />
+	</head>
 
-
-
-  <head>
-	<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, target-densityDpi=device-dpi" />
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-	<meta name="Stefan Haß" content="Stefan Haß">
-    <script data-require="angular.js@1.2.21" data-semver="1.2.21" src="./js/angular.min.js"></script>
-    <script src="./js/angular-ui-router.min.js"></script>
-	<script src="./js/angular-cookies.min.js"></script>
-	<script type="text/javascript" src="dist/jspdf.min.js"></script>
-	
-	<script src="./js/angular-sanitize.min.js"></script>
-	
-
-	 <script src="app.js"></script>
-<!--
-	<script src="./js/html2canvas.min.js"></script>
-	<script src="factory/preloadImages.js"></script>
--->	
-    <script src="controller/appCtrl.js"></script>
-
-    <script src="controller/wochenplanerCtrl.js"></script>
-
-
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-	<script src="http://html2canvas.hertzen.com/build/html2canvas.js"></script>
-
-	<!-- Scripts in development mode -->
-
-
-
-	<!-- Bootstrap -->
-    <link rel="stylesheet" href="style.css" />
-    
-  </head>
-
-  <body ng-controller="appCtrl">
-				<!--
-    <h1> über device detection herausfinden obe es ein adressbuch gibT)</h1> -->
-	<div class="lovebooster_app">
+	<body ng-controller="appCtrl">
 		<div ui-view></div>
-				<!--
-				<h1 data-i18kv="anrede_m" style="font-size:300%; color:red"></h1>
-	
-				<a href="#" ng-click="setLanguage('de')">English</a> | <a href="#" ng-click="setLanguage('en')">PigLatin</a>
-	
-				<h1>Messages</h1>
-				<ul>
-					<li ng-repeat="message in messages">
-						<input type="text" ng-model="message.value">
-					</li>
-				</ul>
-				<header ng-include="'nav.html'" style="height: {{mainheight}}"></header>
-				-->	  
-				
-				<!--
-				<footer ng-include="'footer.html'"></footer>
-				-->	  
-	</div>
-	
-	
-  </body>
-  <!--
-  <script src="aboutCtrl.js"></script>
-	-->  
+	</body>
 </html>

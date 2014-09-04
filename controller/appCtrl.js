@@ -1,12 +1,18 @@
 'use strict';
 angular.module('wochenplaner')
-	.controller('appCtrl', ['$scope',"$location",'$window','$cookieStore',"$filter", function($scope,$location, $window,$cookieStore,$filter) {
+	.controller('appCtrl', ['$scope','$window','$cookieStore',"$filter", function($scope, $window,$cookieStore,$filter) {
 		
+		//Init
+		//Array für die Mitarbeiter
 		$scope.mitarbeiter = [];
+		//Cookie um die Mitarbeiter für die nächste Session zu speichern
 		$scope.mitarbeiter = $cookieStore.get('sgMitarbeiter');
 
+		//Wir zur Zeit nicht benutzt ist für die Öffnungszeiten
 		$scope.von = "";
 		$scope.bis = "";
+		
+		//Array Arbeitswochentage
 		$scope.weekdays = [ 
 			{val:"Mo"},
 	        {val:"Di"},
@@ -15,21 +21,26 @@ angular.module('wochenplaner')
 			{val:"Fr"},
 			{val:"Sa"}
 		];
-		$scope.uhrzeiten =[ {val:"10:00"},
-							{val:"11:00"},
-							{val:"12:00"},
-							{val:"13:00"},
-							{val:"14:00"},
-							{val:"15:00"},
-							{val:"16:00"},
-							{val:"17:00"},
-							{val:"18:00"},
-							{val:"19:00"}
+		
+		//Array für die Uhrzeiten
+		$scope.uhrzeiten =[ {val:"09:00",intval:900},
+							{val:"10:00",intval:1000},
+							{val:"11:00",intval:1100},
+							{val:"12:00",intval:1200},
+							{val:"13:00",intval:1300},
+							{val:"14:00",intval:1400},
+							{val:"15:00",intval:1500},
+							{val:"16:00",intval:1600},
+							{val:"17:00",intval:1700},
+							{val:"18:00",intval:1800},
+							{val:"19:00",intval:1900},
+							{val:"20:00",intval:2000}
 						];
 	
 		
 		
-		$scope.calcRestunden = function (idx) {
+		//Kalkuliert die Rest-Wochenstunden eines Mitarbeiters
+		function calcRestunden (idx) {
 			var summeStd = 0;
 			angular.forEach( $scope.weekdays,function(day, key){
 				if (day.mitarbeiter[idx].stunden) {
@@ -42,8 +53,8 @@ angular.module('wochenplaner')
 			})
 		}
 
-
-
+		// Legt eine Kopie des Mitarbeiters und seiner Arbeitzeiten für den Wochentag an
+		// Und speichert diese in einem Cookie
 		$scope.weekdays2 = function() {
 			angular.forEach( $scope.weekdays,function(day, key){
 			
@@ -62,18 +73,22 @@ angular.module('wochenplaner')
 				})
 			})
 			angular.forEach($scope.mitarbeiter, function(mitarb, key2) {
-				$scope.calcRestunden(key2);
+				calcRestunden(key2);
 			})
 			$cookieStore.remove('sgMitarbeiter');
 		    $cookieStore.put('sgMitarbeiter',$scope.mitarbeiter);
 		}
 		
+		//Wenn es noch keine gepflegte Mitarbeiter gibt
+		//Wird hier das Mitarbeiter-Array initialisert
         if (!$scope.mitarbeiter){
 			$scope.mitarbeiter = [];
 		} else {
 			$scope.weekdays2();
 		}
 		
+		//Hier wie eine HTML-Tabelle erzeugt um 
+		//diese per Scrennshot an jsPDF weiterzugeben
 		$scope.genOutput= function(){
 			var html = "";
 			if ($scope.filiale) {
@@ -87,7 +102,7 @@ angular.module('wochenplaner')
 			html += '<table class="pdfrender">';
 			angular.forEach($scope.weekdays,function(day, key) {
 				//Setzen des WOchentages
-				html += '<tr><th colspan="24" class="day">' + day.val +'</th></tr>';
+				html += '<tr><th colspan="28" class="header1 day">' + day.val +'</th></tr>';
 				//Setzen der Zeitleiste des Wochentages
 				html += '<tr><th></th>';
 				angular.forEach($scope.uhrzeiten,function(uhrzeit, key2) {
@@ -132,7 +147,11 @@ angular.module('wochenplaner')
 			html += '</table>';
 			$scope.doc = html;
 		}
-
+		$scope.clear = function(){
+			$scope.doc = " a";
+		}
+		
+		//Berechner der Gesamt Wochenstundenzahl aller Mitarbeiter
 		$scope.weektotal = function() {
 			var total = 0;
 			angular.forEach($scope.mitarbeiter, function(item) {
@@ -141,53 +160,82 @@ angular.module('wochenplaner')
 			return total;
 		}
 
+		// Hier werden die Arbeitsstart und Endzeiten gesetzt
 		$scope.calcAll = function(mitarbeiter,idx){
 			//var checkbox = $event.target;
 			var dec = 0;
-			var uhrzeiten = mitarbeiter.uhrzeiten;
+			var uhrzeiten = angular.copy( mitarbeiter.uhrzeiten);
 			var voll = $filter('filter')(uhrzeiten,{voll:true},true);
-			var halb = $filter('filter')(uhrzeiten,{halb:true},true);
-
+			var halb = angular.copy($filter('filter')(uhrzeiten,{halb:true},true));
+			
+			mitarbeiter.von = "";
+			mitarbeiter.bis = "";
+			
 			if (!voll) {
 				voll = [];
-				voll[0] = {val : "21:00"};
+				voll[0] = {val : "21:00",intval:2400};
 				dec = 1;
 			}
 			if (!halb) {
 				halb = [];
-				halb[0] = {val:"21:00"};
+				halb[0] = {val: "21:00",intval:2400};
 				dec = 1;
 			}
 		
 			if (!voll[0]) {
-				voll[0] = {val : "21:00"};
+				voll[0] = {val : "21:00",intval:2400};
 				dec = 1;
 			}		
 			if (!halb[0]) {
-				halb[0] = {val:"21:00"};
+				halb[0] = {val:"21:00",intval:2400};
 				dec = 1;
 			}		
-			halb[0].val = halb[0].val.replace(':00',':30');
-			halb[halb.length-1].val = halb[halb.length-1].val.replace(':00',':30');
 
-
-			if (voll[0].val < halb[0].val){
-				mitarbeiter.von = voll[0].val;
+			
+			if ( voll[0].intval <=  halb[0].intval){
+				mitarbeiter.von =  angular.copy(voll[0].val);
 			} else {
-				mitarbeiter.von = halb[0].val;
+				mitarbeiter.von =  angular.copy(halb[0].val.replace(":00",":30" ) );
 			}
 		
-			if ((voll[voll.length-1].val > halb[halb.length-1].val) || halb[halb.length-1].val == "21:30" ){
-				mitarbeiter.bis = voll[voll.length-1].val;
-			} else {
-				mitarbeiter.bis = halb[halb.length-1].val;
-			}
+			
 		
+			if (((voll[voll.length-1].intval > halb[halb.length-1].intval)  || halb[halb.length-1].intval == 2400 ) && voll[voll.length-1].intval != 2400 ){
+				mitarbeiter.bis =  voll[voll.length-1].val.replace(':00',':30');
+			} else if (halb[halb.length-1].intval != 2400)  {
+				mitarbeiter.bis = "" + ((halb[halb.length-1].intval + 100)/100) +":00" ;
+			}
+
+			if (mitarbeiter.von=="24:00" || mitarbeiter.von=="24:30")  {
+				mitarbeiter.von="";
+			}
+			if (mitarbeiter.bis=="24:00" || mitarbeiter.bis=="24:30")  {
+				mitarbeiter.bis="";
+			}
 			mitarbeiter.stunden = (voll.length + halb.length -dec ) / 2;
-			$scope.calcRestunden( idx); 
+			calcRestunden( idx); 
 		}		
 		
 	}])
+	// Wird zur Zeit noch nicht gesetzt
+	.directive('resize', function ($window) {
+		return function (scope, element) {
+			scope.container_wh = function () {
+				y = Math.round($window.innerHeight);
+				var x = $window.innerWidth;
+				var y = $window.innerHeight;
+				if ( ($window.innerWidth / $window.innerHeight) > 0.64 ) {
+					x = Math.round($window.innerHeight * .64);
+				} else {
+					y = Math.round($window.innerWidth / .64);
+				}
+				return  { width: x + "px", height: y + "px"};
+			}
+			angular.element($window).bind('resize', function() {
+				scope.$apply();
+			});
+		}
+	})
 	.directive('resize', function ($window) {
 		return function (scope, element) {
 			scope.container_wh = function () {
