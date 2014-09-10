@@ -1,5 +1,5 @@
-Wochenplaner
-============
+Wochenplaner Angularjs
+======================
 
 Einfacher Personalplaner für einen Store
 
