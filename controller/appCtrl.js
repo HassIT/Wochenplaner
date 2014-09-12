@@ -6,6 +6,8 @@ angular.module('wochenplaner')
 			Developed by Stefan Haß
 		*/
 		/*Validation pattern für Digits */
+		var cookie_filiale = 'sgFiliale';
+		var cookie_mitarbeiter = 'sgMitarbeiter';
 		$scope.pattern_digit =/^(\d)+$/;
 		//Init
 		//Array für die Mitarbeiter
@@ -39,12 +41,14 @@ angular.module('wochenplaner')
 							{val:"20:00",intval:2000}
 						];
 		
+		//alert(JSON.stringify( $.cookie()));
+
 		/*Cookies auf JSON-Format einstellen*/
 		$.cookie.json = true;
 		
 		//Cookie um die Mitarbeiter für die nächste Session zu speichern
-		$scope.mitarbeiter = $.cookie('sgMitarbeiter');  
-		$scope.filiale = $.cookie('sgFiliale'); 
+		$scope.mitarbeiter = $.cookie(cookie_mitarbeiter);  
+		$scope.filiale = $.cookie(cookie_filiale); 
 
 		//Wir zur Zeit nicht benutzt ist für die Öffnungszeiten
 		if (!$scope.filiale) {
@@ -63,8 +67,8 @@ angular.module('wochenplaner')
 		Cookie Funtionen 
 		##############*/
 		function store_filale(){
-			$.removeCookie('sgFiliale');
-			$.cookie('sgFiliale', $scope.filiale, { expires: 9999 });
+			$.removeCookie(cookie_filiale);
+			$.cookie(cookie_filiale, $scope.filiale, { expires: 9999 });
 		}
 		/*Umwandeln eines Base-36 Strings in ein Binaer-String um Flags zu setzen*/
 		function parse_base36_uhrzeit( base_36_string){
@@ -74,10 +78,10 @@ angular.module('wochenplaner')
 			var bytes = [];
 			bytes = dec.toString(2);
 			angular.forEach( uhrzeiten ,function(uhrzeit, key){
-				if (bytes[key*2]=="1"){
+				if (bytes[key*2+1]=="1"){
 					uhrzeit.voll =true;
 				}
-				if (bytes[key*2+1]=="1"){
+				if (bytes[key*2+2]=="1"){
 					uhrzeit.halb =true;
 				}
 			})
@@ -100,7 +104,8 @@ angular.module('wochenplaner')
 					binaer2 += "1";
 				}
 				if (parseInt( binaer2, 2 )>0) {
-					binaer += binaer2;
+				   if (!binaer) binaer= "1";
+					binaer += "" + binaer2;
 					binaer2="";
 				}
 			})
@@ -115,17 +120,79 @@ angular.module('wochenplaner')
 				return "";
 			}
 		}
+		
+		/*
+		*/
+		function getKwDayMitarbeiterCookieName(kw_nr,day_idx, mitarb_idx ){
+			return 'sgKw' + kw_nr + "_" + day_idx + "_" + mitarb_idx;
+		}
+		
 		/*Funktion um einen Mitarbeiter-Arbeitstag im Cookie zu speichern*/
 		function store_kw_day_mitarbeiter(kw_idx,day_idx,mitarbeiter_idx){
 			if (!$scope.kws[kw_idx]) return;
 			if (!$scope.kws[kw_idx].days[day_idx]) return;
 			if (!$scope.kws[kw_idx].days[day_idx].mitarbeiter[mitarbeiter_idx]) return;
-			var cookie_name = 'sgKw' + $scope.kws[kw_idx].kw + "_" + day_idx + $scope.mitarbeiter[mitarbeiter_idx].name;
+			var cookie_name = getKwDayMitarbeiterCookieName($scope.kws[kw_idx].kw,day_idx,mitarbeiter_idx);
 			$.cookie.json = false;
 			$.removeCookie(cookie_name );
-			$.cookie(cookie_name, get_cookiestring($scope.kws[kw_idx].days[day_idx].mitarbeiter[mitarbeiter_idx]), { expires: 9999 });
+			var cookiestring = get_cookiestring($scope.kws[kw_idx].days[day_idx].mitarbeiter[mitarbeiter_idx]);
+			if (cookiestring) {
+				$.cookie(cookie_name, cookiestring, { expires: 9999 });
+			}
 			$.cookie.json = true;
 		}
+		
+		function check_cookie_name( string ,string_compare , del){
+			var last_idx;
+			if (!del) {
+				if ( string==string_compare) del =true;
+				if (string.substr(0,4) == 'sgKw'){
+					last_idx = string.lastIndexOf(string_compare);
+					if (last_idx!= -1 && (string.length == (last_idx + string_compare.length))) {
+						del =true;
+					}
+				}
+			}
+			return del;
+		}
+		
+		/*Räumt alter Cookies weg*/
+		function cleanUpCookies(){
+			var all_cookie = [];
+			angular.forEach( $.cookie() ,function(cook, key){
+				var cookie ={
+					name:key,
+					value:cook
+				};
+				all_cookie.push(cookie);
+			});
+			
+			for (var i = all_cookie.length - 1; i >= 0; i--) {
+			        var del = false;
+					del = check_cookie_name(all_cookie[i].name,cookie_filiale,del);
+					del = check_cookie_name(all_cookie[i].name,cookie_mitarbeiter,del);
+					if (!del){
+						angular.forEach( $scope.mitarbeiter, function ( mitarb, idx )  {
+							if (!del) {
+								del = check_cookie_name(all_cookie[i].name,mitarb.name,del);
+							}
+						})
+					}
+				
+					if (del){
+						all_cookie.splice(i,1)
+					}
+			}
+			angular.forEach(all_cookie, function ( cook,key){
+				$.removeCookie(cook.name);
+			})
+			
+			
+		}
+		
+		
+
+		cleanUpCookies();
 		
 		function clear_kw_day_mitarbeiter(kw_idx,day_idx,mitarbeiter_idx){
 			if (!$scope.kws[kw_idx]) return;
@@ -141,10 +208,10 @@ angular.module('wochenplaner')
 			var date = new Date($scope.filiale.year,0,1,0,0,0,0);
 			var miliseconds = date.getTime();
 			var day = date.getDay();
-			var kw_start_datum = kw * 7 * day_mili;
+			var kw_start_datum = (kw-1) * 7 * day_mili;
 			kw_start_datum = miliseconds + kw_start_datum  - (day - weekday-2) * day_mili;
 			var date2 = new Date(kw_start_datum);
-			var return_Date = $scope.days[weekday].val + ", den " + date2.getUTCDate() + "." + (date2.getMonth()+1) + "." + date2.getFullYear();
+			var return_Date = $scope.days[weekday].val + ", den " + date2.getUTCDate() + "." + (date2.getUTCMonth()+1) + "." + date2.getFullYear();
 			return return_Date;
 		}
 
@@ -153,6 +220,9 @@ angular.module('wochenplaner')
 		}
 		
 		$scope.change_filiale_kw = function() {
+			if ($scope.filiale.kw_von > $scope.filiale.kw_bis){
+				$scope.filiale.kw_bis = $scope.filiale.kw_von;
+			}
 			generate_kws();
 			store_filale();
 		}
@@ -202,6 +272,76 @@ angular.module('wochenplaner')
 			calc_days();
 		}
 		
+		
+		function add_mitarbeiter($index){
+			$scope.mitarbeiter.push({
+				name: "Name" + $scope.mitarbeiter.length,
+				std: 0
+			});
+			calc_days();
+			change_kw_mitarbeiter();
+		};
+		
+		
+		function change_kw_mitarbeiter() {
+			angular.forEach($scope.kws, function(kw, key1) {
+				angular.forEach(kw.days, function(day, key2) {
+					if (!day.mitarbeiter) day.mitarbeiter =[];
+					angular.forEach($scope.mitarbeiter, function(mitarb, key2) {
+						if (!day.mitarbeiter[key2]) {
+							day.mitarbeiter[key2] = angular.copy(mitarb);
+							day.mitarbeiter[key2].uhrzeiten = [];
+							day.mitarbeiter[key2].uhrzeiten =  angular.copy($scope.uhrzeiten);
+						} else {
+							day.mitarbeiter[key2].name = mitarb.name;
+							day.mitarbeiter[key2].std  = mitarb.std;
+							calculate_mitarbeiter_tag(mitarb);
+						}
+					});
+
+				});
+				calcTagesStunden(kw.days);
+				angular.forEach($scope.mitarbeiter, function(mitarb, mitarb_idx){
+					calcMitarbeiterWochenRestunden( kw.days ,mitarb_idx);
+				});
+				calcWochenStunden(kw);
+			});
+		}
+		
+		
+		
+		$scope.change_mitarbeiter = function() {
+			calc_days();
+			change_kw_mitarbeiter();
+		}
+		
+		// Neuen Mitarbeiter anlegen
+		$scope.add_mitarbeiter = function($index) {
+			add_mitarbeiter($index);
+		};
+		
+		
+		function remove_mitarbeiter(index) {
+			//calc_days();
+			$scope.mitarbeiter.splice(index, 1);
+			angular.forEach($scope.weekdays, function(day, key) {
+				day.mitarbeiter.splice(index, 1);
+			})
+			
+			angular.forEach($scope.kws, function(kw, key1) {
+				angular.forEach(kw.days, function(day, key2) {
+					day.mitarbeiter.splice(index, 1);
+				});
+			})
+			cleanUpCookies();
+		}
+
+		// Mitarbeiter aus der Liste nehmen
+		$scope.remove_mitarbeiter = function(index) {
+			remove_mitarbeiter(index);
+		}
+		
+		
 		function calc_days() {
 			angular.forEach( $scope.days,function(day, key){
 			    if (!day.mitarbeiter) day.mitarbeiter =[];
@@ -217,27 +357,24 @@ angular.module('wochenplaner')
 					
 				})
 			})
-			$.removeCookie('sgMitarbeiter');
-			$.cookie('sgMitarbeiter', $scope.mitarbeiter, { expires: 9999 });
+			$.removeCookie(cookie_mitarbeiter);
+			$.cookie(cookie_mitarbeiter, $scope.mitarbeiter, { expires: 9999 });
 		}
 		
 		// Initialisert eine Arbeitswoche
-		function init_week(kw_nr,init){
+		function init_week(kw_idx){
 			//Über den Init-Parameter(TRUE,FALSE) wird bestimmt ob die Arbeitswoche aus einem Cookie ermittelt werden soll
 			//oder mit Default-Werten initialisiert wird
 			if (!$scope.days) {calc_days()};
 			if (!$scope.days) return;
-			var kw = {
-				kw:kw_nr,
-				days:angular.copy($scope.days),
-				std:"",
-				umsatz_ziel:0
-			}
+			$scope.kws[kw_idx].days = angular.copy($scope.days);
+			$scope.kws[kw_idx].std  = "";
+			$scope.kws[kw_idx].umsatz_ziel = 0;
+			/*
 			if (!init) {
 				// wenn die Arbeitswoche aus einem Cookie ermittelt werden soll 
-				set_kw_by_cookie(kw,false);
 			}
-			return kw;	
+			*/
 			
 		}
 
@@ -246,7 +383,9 @@ angular.module('wochenplaner')
 		function generate_kws(){
 			$scope.kws=[];
 			for (var kw_nr=$scope.filiale.kw_von; kw_nr<=$scope.filiale.kw_bis; kw_nr++) {
-				$scope.kws.push(init_week(kw_nr,false));
+				$scope.kws.push({ kw: kw_nr});
+				init_week($scope.kws.length-1,false);
+				set_kw_by_cookie($scope.kws.length-1,false);
 			}
 		}
 		
@@ -426,58 +565,95 @@ angular.module('wochenplaner')
 		// Hier werden die Arbeitsstart und Endzeiten gesetzt
 		// Aufruf bei dem setzen der Checkbox
 		$scope.calc_mitarbeiter_tag = function(kw,days_idx,mitarbeiter_idx){
+			//console.log("$scope.calc_mitarbeiter_tag(" +JSON.stringify(kw)  + ")");
 			calc_mitarbeiter_tag(kw,days_idx,mitarbeiter_idx);
 		}
 
+		
+		/* #############################################################
+		Funktionen zum Löschen, Anlegen und Speichern der Kalenderwochen
+		##############################################################*/
+		$scope.save_kws = function (){
+			if (!$scope.kws) return;
+			angular.forEach($scope.kws, function (kw,kw_idx){
+				store_kw(kw_idx);
+			});
+		}
+		
+		$scope.load_kws = function (){
+			if (!$scope.kws) return;
+			angular.forEach($scope.kws, function (kw,kw_idx){
+				set_kw_by_cookie(kw_idx,true);
+			});
+		}
+		
+		$scope.clear_kws = function (){
+			if (!$scope.kws) return;
+			angular.forEach($scope.kws, function (kw,kw_idx){
+				clear_kw(kw_idx);
+			});
+		}
+		
 		/* #############################################################
 		Funktionen zum Löschen, Anlegen und Speichern der Kalenderwochen
 		##############################################################*/
 		function store_kw(kw_idx){
+			console.log("store_kw(" +kw_idx  + ")");
 			if (!$scope.kws[kw_idx]) return;
 			angular.forEach( $scope.kws[kw_idx].days, function( day,day_idx){
 				store_kw_day(kw_idx,day_idx);
-			})
+			});
+			alert("Kalenderwoche " + $scope.kws[kw_idx].kw + " gespeichert.");
+			
 		}
 		function clear_kw(kw_idx){
+			console.log("clear_kw(" +kw_idx  + ")");
 			if (!$scope.kws[kw_idx]) return;
 			if (!$scope.kws[kw_idx].days) return;
-			$scope.kws[kw_idx] = init_week($scope.kws[kw_idx].kw,true);
+			init_week(kw_idx);
 		}
-		function set_kw_by_cookie(kw, init){
-		   angular.forEach( kw.days, function( day , day_idx){
-				set_kw_day_by_cookie(kw,day_idx,init);
+		function set_kw_by_cookie(kw_idx, init){
+			console.log("set_kw_by_cookie(" +kw_idx  + ",init)");
+			if (!$scope.kws[kw_idx]) return;
+			if (!$scope.kws[kw_idx].days) return;
+			angular.forEach( $scope.kws[kw_idx].days, function( day , day_idx){
+				set_kw_day_by_cookie(kw_idx,day_idx,init);
 			})
 			angular.forEach( $scope.mitarbeiter, function ( mitarb,mitarb_idx){
-				calcMitarbeiterWochenRestunden( kw.days ,mitarb_idx); 
+				calcMitarbeiterWochenRestunden( $scope.kws[kw_idx].days ,mitarb_idx); 
 			});
-			calcWochenStunden(kw);
+			calcWochenStunden($scope.kws[kw_idx]);
 		}
-		$scope.save_kw = function($index) {
-			store_kw($index);
+		$scope.save_kw = function(kw_idx) {
+			console.log("$scope.save_kw(" +kw_idx  + ")");
+			store_kw(kw_idx);
 		}
 		$scope.clear_kw = function (kw_idx) {
+			console.log("$scope.clear_kw(" +kw_idx  + ")");
 			clear_kw(kw_idx);
 			calcWochenStunden($scope.kws[kw_idx]);
 		}
 		$scope.load_kw = function(kw_idx) {
+			console.log("$scope.load_kw(" +kw_idx  + ")");
 			if (!$scope.kws) return;
 			if (!$scope.kws[kw_idx]) return;
-			set_kw_by_cookie($scope.kws[kw_idx],true);
+			set_kw_by_cookie(kw_idx,true);
 
 		}
 		/* ###################################################################
 		Funktionen zum Löschen, Anlegen und Speichern der Wochen-Kalendertagen
 		################################################################### */
 		function store_kw_day(kw_idx,day_idx){
+			console.log("store_kw_day(" +kw_idx + "," + day_idx + ")");
 			if (!$scope.kws[kw_idx]) return;
 			if (!$scope.kws[kw_idx].days[day_idx]) return;
 			if (!$scope.kws[kw_idx].days[day_idx].mitarbeiter) return;
 			angular.forEach( $scope.kws[kw_idx].days[day_idx].mitarbeiter ,function(mitarb, key){
 				store_kw_day_mitarbeiter(kw_idx,day_idx,key);
 			})
-			
 		}
 		function clear_kw_day(kw_idx,day_idx){
+			console.log("clear_kw_day(" +kw_idx + "," + day_idx + ")");
 			if (!$scope.kws[kw_idx]) return;
 			if (!$scope.kws[kw_idx].days[day_idx]) return;
 			if (!$scope.kws[kw_idx].days[day_idx].mitarbeiter) return;
@@ -485,19 +661,27 @@ angular.module('wochenplaner')
 				clear_kw_day_mitarbeiter(kw_idx,day_idx,mitarb_idx);
 			})
 		}
-		function set_kw_day_by_cookie(kw,day_idx,init){
-			if (!kw.days[day_idx]) return;
-			var day = kw.days[day_idx];
-			angular.forEach(day.mitarbeiter, function(mitarb,mit_idx){
-				set_kw_day_mitarbeiter_by_cookie(mitarb,kw.kw,day_idx,init);
+		function set_kw_day_by_cookie(kw_idx,day_idx,init){
+			console.log("set_kw_day_by_cookie(" +kw_idx + "," + day_idx + ",init)");
+
+			if (!$scope.kws[kw_idx]) return;
+			if (!$scope.kws[kw_idx].days[day_idx]) return;
+			angular.forEach($scope.kws[kw_idx].days[day_idx].mitarbeiter, function(mitarb,mit_idx){
+				set_kw_day_mitarbeiter_by_cookie(kw_idx,day_idx,mit_idx,init);
 			});
-			calcTagesStunden(day);
+			calcTagesStunden($scope.kws[kw_idx].days[day_idx]);
 
 		}
 		$scope.save_kw_day = function(kw_idx,day_idx) {
+			console.log("$scope.save_kw_day(" +kw_idx + "," + day_idx + ")");
+		
 			store_kw_day(kw_idx,day_idx);
+			alert($scope.days[day_idx].val + " von der Kalenderwoche " + $scope.kws[kw_idx].kw + " ist gespeichert.");
+			
 		}
 		$scope.clear_kw_day = function (kw_idx,day_idx) {
+			console.log("$scope.clear_kw_day(" +kw_idx + "," + day_idx + ")");
+
 			clear_kw_day(kw_idx,day_idx);
 			angular.forEach( $scope.mitarbeiter, function ( mitarb,mitarb_idx){
 				calc_mitarbeiter_tag($scope.kws[kw_idx],day_idx,mitarb_idx);
@@ -508,23 +692,25 @@ angular.module('wochenplaner')
 			
 		}
 		$scope.load_kw_day = function(kw_idx,day_idx) {
+			console.log("$scope.load_kw_day(" +kw_idx +"," + day_idx + ")");
 			if (!$scope.kws) return;
 			if (!$scope.kws[kw_idx]) return;
-			set_kw_day_by_cookie($scope.kws[kw_idx],day_idx,true);
+			set_kw_day_by_cookie(kw_idx,day_idx,true);
 			angular.forEach( $scope.mitarbeiter, function ( mitarb,mitarb_idx){
 				calc_mitarbeiter_tag($scope.kws[kw_idx],day_idx,mitarb_idx);
 				calcMitarbeiterWochenRestunden( $scope.kws[kw_idx].days ,mitarb_idx); 
 			});
 			calcTagesStunden($scope.kws[kw_idx].days[day_idx]);
 			calcWochenStunden($scope.kws[kw_idx]);
-			
 		}
 		/* ###############################################################################
 		Funktionen zum Löschen, Anlegen und Speichern des Mitarbeiter Wochen-Kalendertages
 		################################################################################*/
-		function set_kw_day_mitarbeiter_by_cookie(mitarbeiter,kw_nr,day_idx,init){
+		function set_kw_day_mitarbeiter_by_cookie(kw_idx,day_idx, mit_idx ,init){
+			console.log("set_kw_day_mitarbeiter_by_cookie(" +kw_idx +"," + day_idx + "," + mit_idx + ",init)");
+			var mitarbeiter = $scope.kws[kw_idx].days[day_idx].mitarbeiter[mit_idx];
 			if (!mitarbeiter) return;
-			var cookie_name = 'sgKw' + kw_nr + "_" + day_idx  + mitarbeiter.name;
+			var cookie_name = getKwDayMitarbeiterCookieName($scope.kws[kw_idx].kw,day_idx,mit_idx);
 			$.cookie.json = false;
 			var uhrzeiten = $.cookie(cookie_name);
 			$.cookie.json = true;
@@ -538,9 +724,14 @@ angular.module('wochenplaner')
 		
 		
 		$scope.save_kw_day_mitarbeiter = function(kw_idx,day_idx,mitarb_idx) {
+			console.log("$scope.save_kw_day_mitarbeiter(" +kw_idx + "," + day_idx +  "," + mitarb_idx + ")");
+
 			store_kw_day_mitarbeiter(kw_idx,day_idx,mitarb_idx);
+			alert("Mitarbeiter:"+ $scope.mitarbeiter[mitarb_idx].name + " für den " + $scope.days[day_idx].val + " von der Kalenderwoche " + $scope.kws[kw_idx].kw + " ist gespeichert.");
+			
 		}
 		$scope.clear_kw_day_mitarbeiter = function (kw_idx,day_idx,mitarb_idx) {
+			console.log("$scope.clear_kw_day_mitarbeiter(" +kw_idx + "," + day_idx +  "," + mitarb_idx + ")");
 			clear_kw_day_mitarbeiter(kw_idx,day_idx,mitarb_idx);
 			calc_mitarbeiter_tag($scope.kws[kw_idx],day_idx,mitarb_idx);
 			calcMitarbeiterWochenRestunden( $scope.kws[kw_idx].days ,mitarb_idx);
@@ -551,11 +742,13 @@ angular.module('wochenplaner')
 			
 		}
 		$scope.load_kw_day_mitarbeiter = function(kw_idx,day_idx,mitarb_idx) {
+			console.log("$scope.load_kw_day_mitarbeiter(" +kw_idx + "," + day_idx +  "," + mitarb_idx + ")");
+
 			if (!$scope.kws[kw_idx]) return;
 			if (!$scope.kws[kw_idx].days[day_idx]) return;
 			if (!$scope.kws[kw_idx].days[day_idx].mitarbeiter[mitarb_idx]) return;
-			var mitarbeiter = $scope.kws[kw_idx].days[day_idx].mitarbeiter[mitarb_idx];
-			set_kw_day_mitarbeiter_by_cookie(mitarbeiter,$scope.kws[kw_idx].kw,day_idx,true);
+			//var mitarbeiter = $scope.kws[kw_idx].days[day_idx].mitarbeiter[mitarb_idx];
+			set_kw_day_mitarbeiter_by_cookie(kw_idx,day_idx,mitarb_idx,true);
 			calcMitarbeiterWochenRestunden( $scope.kws[kw_idx].days ,mitarb_idx);
 			angular.forEach($scope.kws[kw_idx].days, function (days, idx ){
 				calcTagesStunden(days);

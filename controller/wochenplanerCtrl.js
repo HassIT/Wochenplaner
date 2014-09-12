@@ -8,23 +8,7 @@ angular
      	$scope.pagetitle = "Wochenplaner"
 		$scope.counter = 0;
 		
-		// Neuen Mitarbeiter anlegen
-		$scope.addItem = function() {
-			$scope.mitarbeiter.push({
-				name: "Name eintragen",
-				std: 0
-			});
-			$scope.calc_days();
-		};
 		
-		// Mitarbeiter aus der Liste nehmen
-		$scope.removeItem = function(index) {
-			$scope.mitarbeiter.splice(index, 1);
-			angular.forEach($scope.weekdays, function(day, key) {
-				day.mitarbeiter.splice(index, 1);
-			})
-			$scope.calc_days();
-		}
 		
 		function generate_Canvas_Kw( test,kw_nr ){
 			angular.element(document.querySelector(test)).attr('style','display:block;');
